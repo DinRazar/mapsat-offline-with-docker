@@ -31,21 +31,28 @@ body {
 
 .dataDropdown {
     width: 400px;
+    font-family: Arial, sans-serif;
 }
 
 .styled-dropdown {
     width: 400px;
     padding: 10px 15px;
     font-size: 16px;
-    background-color: #fff;
     appearance: none;
     cursor: pointer;
     transition: border-color 0.3s ease-in-out;
+    font-family: inherit !important;
+    font-weight: bold;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(110, 106, 106, 0.1);
+    border: 2px solid #000;
+    background: #f0f0f0;
 }
 
 .styled-dropdown:focus {
-    border-color: aquamarine;
+    border-color: rgb(0, 0, 0);
     outline: none;
+    font-family: Arial, sans-serif;
 }
 
 #map {
@@ -85,8 +92,31 @@ body {
 }
 
 #confirmHeightButton:hover {
-    background: #4a24a2;
+    background: #000000;
     /* Темнее при наведении */
+}
+
+#addPointButton {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    /* width: calc(20% - 10px); */
+    background: #f0f0f0;
+    font-family: inherit !important;
+    align-items: center;
+    box-shadow: 0px 2px 4px rgba(110, 106, 106, 0.1);
+    /* Тень */
+}
+
+#addPointButton:hover {
+    background: #e0e0e0;
+    /* Цвет фона при наведении */
 }
 
 #results {
@@ -112,5 +142,5 @@ body {
     border-radius: 5px;
     width: calc(45% - 10px);
     /* Ширина с учётом отступов */
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 2px 4px rgba(110, 106, 106, 0.1);
 }
