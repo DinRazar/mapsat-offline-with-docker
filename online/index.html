@@ -1,84 +1,47 @@
-        // // Оффлайн версия
-        // var map = L.map('map').setView([55.755811, 37.617617], 11);
-        // L.tileLayer('/data/Tiles/{z}/{x}/{y}.png', {
-        //     maxZoom: 13,
-        //     minZoom: 3,
-        //     tileSize: 256,
-        //     zoomOffset: 0,
-        //     attribution: 'Тестовая карта'
-        // }).addTo(map);
+<!DOCTYPE html>
+<html lang="en">
 
-        // // Онлайн версия
-        // var map = L.map('map').setView([55.755811, 37.617617], 11);
-        // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        //     maxZoom: 19,
-        // }).addTo(map);
-        // Инициализация карты
-        // var map = L.map('map').setView([55.755811, 37.617617], 11);
-        // var tileLayer;
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapsat-offline</title>
+    <script src="./geomag-master/dist/geomag.min.js"></script>
+    <!-- Библиотека для геомагнитных рассчётов -->
+    <script src="./libs/dist/leaflet.js"></script>
+    <!-- Библиотека leaflet для оффлайн расчётов -->
+    <script src="./libs/dist/leaflet-measure.js"></script>
+    <link rel="stylesheet" href="./libs/dist/leaflet.css">
+    <link rel="stylesheet" href="./libs/dist/leaflet-measure.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
 
-        // function setOfflineMode() {
-        //     if (tileLayer) {
-        //         map.removeLayer(tileLayer);
-        //     }
-        //     tileLayer = L.tileLayer('/data/Tiles/{z}/{x}/{y}.png', {
-        //         maxZoom: 13,
-        //         minZoom: 3,
-        //         tileSize: 256,
-        //         zoomOffset: 0,
-        //         attribution: 'Тестовая карта'
-        //     }).addTo(map);
-        // }
-
-        // function setOnlineMode() {
-        //     if (tileLayer) {
-        //         map.removeLayer(tileLayer);
-        //     }
-        //     tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        //         maxZoom: 19,
-        //     }).addTo(map);
-        // }
-
-        // // Установка оффлайн режима по умолчанию
-        // setOfflineMode();
-
-        // // Переключение между режимами
-        // document.getElementById('modeSwitch').addEventListener('change', function() {
-        //     if (this.value === 'offline') {
-        //         setOfflineMode();
-        //     } else {
-        //         setOnlineMode();
-        //     }
-        // });
-        // Инициализация карты
+<body>
+    <div id="controls">
+        <select id="dataDropdown" class="styled-dropdown">
+        <option value="" disabled selected hidden> Выберите спутник </option>
+        </select>
+        <!-- Контейнер для результатов -->
+        <div id="results"></div>
+        <button id="addPointButton" disabled>Расчёт препятсвия</button>
+        <div id="results2"></div>
+    </div>
+    <!-- Карта -->
+    <div id="map"></div>
+    <!-- Библиотека leaflet для онлайн расчётов -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Библиотека для геодезических расчётов -->
+    <script src="./libs/dist/leaflet.geodesic.umd.min.js"></script>
+    <!-- Код js скрыл, но пока не удалил, потом будет удобнее дороюатьвать  -->
+    <!-- <script>
+        // Оффлайн версия
         var map = L.map('map').setView([55.755811, 37.617617], 11);
-
-        // Оффлайн слой
-        var offlineLayer = L.tileLayer('/data/Tiles/{z}/{x}/{y}.png', {
+        L.tileLayer('/data/Tiles/{z}/{x}/{y}.png', {
             maxZoom: 13,
             minZoom: 3,
             tileSize: 256,
             zoomOffset: 0,
-            attribution: 'Оффлайн карта'
-        });
-
-        // Онлайн слой
-        var onlineLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: 'Онлайн карта'
-        });
-
-        // Добавляем оффлайн слой по умолчанию
-        offlineLayer.addTo(map);
-
-        // Создаем контрол для переключения слоев
-        var baseLayers = {
-            "Оффлайн": offlineLayer,
-            "Онлайн": onlineLayer
-        };
-
-        var layerControl = L.control.layers(baseLayers).addTo(map);
-        layerControl.setPosition('topright'); // Позиция в правом верхнем углу
+            attribution: 'Тестовая карта'
+        }).addTo(map);
 
         // отключение флага, что?
         map.attributionControl.setPrefix(false)
@@ -272,3 +235,9 @@
                 alert('Точки для расчета не выбраны.');
             };
         };
+    </script> -->
+    <!-- подключение скрипта с кодом -->
+    <script src="./main.js"></script>
+</body>
+
+</html>

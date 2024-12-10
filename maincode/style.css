@@ -144,3 +144,25 @@ body {
     /* Ширина с учётом отступов */
     box-shadow: 0px 2px 4px rgba(110, 106, 106, 0.1);
 }
+
+
+/* 
+.dropdown-container {
+    margin-right: 10px;
+}
+
+.styled-dropdown {
+    padding: 5px;
+    font-size: 14px;
+}
+
+.small-dropdown {
+    width: 100px;
+} */
+
+.leaflet-control-layers {
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+}
