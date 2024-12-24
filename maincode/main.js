@@ -1,274 +1,247 @@
-        // // Оффлайн версия
-        // var map = L.map('map').setView([55.755811, 37.617617], 11);
-        // L.tileLayer('/data/Tiles/{z}/{x}/{y}.png', {
-        //     maxZoom: 13,
-        //     minZoom: 3,
-        //     tileSize: 256,
-        //     zoomOffset: 0,
-        //     attribution: 'Тестовая карта'
-        // }).addTo(map);
+       // Инициализация карты
+       var map = L.map('map').setView([55.755811, 37.617617], 11);
 
-        // // Онлайн версия
-        // var map = L.map('map').setView([55.755811, 37.617617], 11);
-        // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        //     maxZoom: 19,
-        // }).addTo(map);
-        // Инициализация карты
-        // var map = L.map('map').setView([55.755811, 37.617617], 11);
-        // var tileLayer;
+       // Оффлайн слой
+       var offlineLayer = L.tileLayer('/data/Tiles/{z}/{x}/{y}.png', {
+           maxZoom: 16,
+           minZoom: 3,
+           tileSize: 256,
+           zoomOffset: 0,
+           attribution: 'Оффлайн карта'
+       });
 
-        // function setOfflineMode() {
-        //     if (tileLayer) {
-        //         map.removeLayer(tileLayer);
-        //     }
-        //     tileLayer = L.tileLayer('/data/Tiles/{z}/{x}/{y}.png', {
-        //         maxZoom: 13,
-        //         minZoom: 3,
-        //         tileSize: 256,
-        //         zoomOffset: 0,
-        //         attribution: 'Тестовая карта'
-        //     }).addTo(map);
-        // }
+       // Онлайн слой
+       var onlineLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+           maxZoom: 19,
+           attribution: 'Онлайн карта'
+       });
 
-        // function setOnlineMode() {
-        //     if (tileLayer) {
-        //         map.removeLayer(tileLayer);
-        //     }
-        //     tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        //         maxZoom: 19,
-        //     }).addTo(map);
-        // }
+       // Добавляем оффлайн слой по умолчанию
+       offlineLayer.addTo(map);
 
-        // // Установка оффлайн режима по умолчанию
-        // setOfflineMode();
+       // Создаем контрол для переключения слоев
+       var baseLayers = {
+           "Оффлайн": offlineLayer,
+           "Онлайн": onlineLayer
+       };
 
-        // // Переключение между режимами
-        // document.getElementById('modeSwitch').addEventListener('change', function() {
-        //     if (this.value === 'offline') {
-        //         setOfflineMode();
-        //     } else {
-        //         setOnlineMode();
-        //     }
-        // });
-        // Инициализация карты
-        var map = L.map('map').setView([55.755811, 37.617617], 11);
+       var layerControl = L.control.layers(baseLayers).addTo(map);
+       layerControl.setPosition('topright'); // Позиция в правом верхнем углу
 
-        // Оффлайн слой
-        var offlineLayer = L.tileLayer('/data/Tiles/{z}/{x}/{y}.png', {
-            maxZoom: 13,
-            minZoom: 3,
-            tileSize: 256,
-            zoomOffset: 0,
-            attribution: 'Оффлайн карта'
-        });
+       // отключение флага, что?
+       map.attributionControl.setPrefix(false)
 
-        // Онлайн слой
-        var onlineLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: 'Онлайн карта'
-        });
+       let lastMarker; // переменная для маркера, создающегося по клику
+       let markerFromDB; // переменная для маркера из базы данных
+       let geodesic; // переменная для геодезической линии между lastMarker и markerFromDB
+       let thirdMarker; // переменная для маркера дрона
+       let thirdGeodesic; // переменная для геодезической линии между lastMarker и thirdMarker
+       let elevationValue;
 
-        // Добавляем оффлайн слой по умолчанию
-        offlineLayer.addTo(map);
+       // обработчик нажатия по карте
+       map.on('click', function(e) {
+           const lat = e.latlng.lat;
+           const lng = e.latlng.lng;
 
-        // Создаем контрол для переключения слоев
-        var baseLayers = {
-            "Оффлайн": offlineLayer,
-            "Онлайн": onlineLayer
-        };
+           // создание маркера 
+           if (lastMarker) {
+               map.removeLayer(lastMarker);
+           }
 
-        var layerControl = L.control.layers(baseLayers).addTo(map);
-        layerControl.setPosition('topright'); // Позиция в правом верхнем углу
+           lastMarker = L.marker([lat, lng], {
+               draggable: true
+           }).addTo(map);
+           lastMarker.on('drag', updateGeodesicAndCalculations);
+           updateGeodesicAndCalculations();
+           // Отправка координат на сервер
+           fetch('http://localhost:3000/api/getElevation', {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json'
+                   },
+                   body: JSON.stringify({
+                       latitude: lat,
+                       longitude: lng
+                   })
+               })
+               .then(response => {
+                   if (!response.ok) {
+                       throw new Error('Network response was not ok');
+                   }
+                   return response.json();
+               })
+               .then(data => {
+                   elevationValue = data.elevation;
+                   alert(`Высота: ${elevationValue}`);
+               })
+               .catch(error => {
+                   console.error('Ошибка:', error);
+                   alert('Ошибка при получении высоты');
+               });
+       });
 
-        // отключение флага, что?
-        map.attributionControl.setPrefix(false)
+       // Данные подгружаются с сервера
+       fetch('http://localhost:3000/data')
+           .then(response => response.json())
+           .then(data => {
+               const dropdown = document.getElementById('dataDropdown');
+               data.forEach(item => {
+                   const option = document.createElement('option');
+                   option.value = item.id;
+                   option.textContent = item.Names;
+                   option.dataset.latitude = item.latitude;
+                   option.dataset.longitude = item.longitude;
+                   dropdown.appendChild(option);
+               });
 
-        let lastMarker; // переменная для маркера, создающегося по клику
-        let markerFromDB; // переменная для маркера из базы данных
-        let geodesic; // переменная для геодезической линии между lastMarker и markerFromDB
-        let thirdMarker; // переменная для маркера дрона
-        let thirdGeodesic; // переменная для геодезической линии между lastMarker и thirdMarker
+               dropdown.addEventListener('change', (event) => {
+                       const selectedOption = event.target.selectedOptions[0];
+                       const latitude = selectedOption.dataset.latitude;
+                       const longitude = selectedOption.dataset.longitude;
 
-        // обработчик нажатия по карте
-        map.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
+                       if (markerFromDB) {
+                           map.removeLayer(markerFromDB);
+                       }
 
-            // создание маркера 
-            if (lastMarker) {
-                map.removeLayer(lastMarker);
-            }
+                       markerFromDB = L.marker([latitude, longitude]).addTo(map).bindPopup(selectedOption.textContent);
+                       updateGeodesicAndCalculations();
 
-            lastMarker = L.marker([lat, lng], {
-                draggable: true
-            }).addTo(map);
-            lastMarker.on('drag', updateGeodesicAndCalculations);
-            updateGeodesicAndCalculations();
-        });
+                   })
+                   .catch(error => console.error('Ошибка загрузки данных:', error));
+           });
 
-        // Данные подгружаются с сервера
-        fetch('http://localhost:3000/data')
-            .then(response => response.json())
-            .then(data => {
-                const dropdown = document.getElementById('dataDropdown');
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.Names;
-                    option.dataset.latitude = item.latitude;
-                    option.dataset.longitude = item.longitude;
-                    dropdown.appendChild(option);
-                });
+       // функция для создания геодезических линий
+       function updateGeodesicAndCalculations() {
+           if (geodesic) {
+               map.removeLayer(geodesic);
+           }
 
-                dropdown.addEventListener('change', (event) => {
-                        const selectedOption = event.target.selectedOptions[0];
-                        const latitude = selectedOption.dataset.latitude;
-                        const longitude = selectedOption.dataset.longitude;
+           if (lastMarker && markerFromDB) {
+               document.getElementById('addPointButton').disabled = false;
+               geodesic = L.geodesic([lastMarker.getLatLng(), markerFromDB.getLatLng()], { // между точкой (по клику) и из БД
+                   weight: 3,
+                   opacity: 1,
+                   color: 'blue',
+                   steps: 50
+               }).addTo(map);
 
-                        if (markerFromDB) {
-                            map.removeLayer(markerFromDB);
-                        }
+               // Выполнение расчетов
+               performCalculations();
+           };
+           if (thirdMarker) {
+               if (thirdGeodesic) {
+                   map.removeLayer(thirdGeodesic);
+               }
+               thirdGeodesic = L.geodesic([lastMarker.getLatLng(), thirdMarker.getLatLng()], {
+                   weight: 3,
+                   opacity: 1,
+                   color: 'red',
+                   steps: 50
+               }).addTo(map);
 
-                        markerFromDB = L.marker([latitude, longitude]).addTo(map).bindPopup(selectedOption.textContent);
-                        updateGeodesicAndCalculations();
+               somethingCalcuiation()
+           };
+       };
 
-                    })
-                    .catch(error => console.error('Ошибка загрузки данных:', error));
+       function updateGeodesicAndCalculationsWithThirdMarker() {
+           document.getElementById('addPointButton').addEventListener('click', function() {
+               // Очищаем results2 при нажатии на кнопку
+               document.getElementById('results2').innerHTML = '';
+               const newPointLatLng = lastMarker ? lastMarker.getLatLng() : null;
 
-            });
+               if (thirdMarker) {
+                   // Удаляем третий маркер и геодезическую линию
+                   map.removeLayer(thirdMarker);
+                   thirdMarker = null;
 
-        // функция для создания геодезических линий
-        function updateGeodesicAndCalculations() {
-            if (geodesic) {
-                map.removeLayer(geodesic);
-            }
+                   if (thirdGeodesic) {
+                       map.removeLayer(thirdGeodesic);
+                       thirdGeodesic = null;
+                   }
+               } else if (newPointLatLng) {
+                   // Создаем третий маркер
+                   thirdMarker = L.marker(newPointLatLng, {
+                       draggable: true,
+                       icon: thirdMarkerIcon
+                   }).addTo(map);
+                   thirdMarker.on('drag', updateGeodesicAndCalculations);
+               }
 
-            if (lastMarker && markerFromDB) {
-                document.getElementById('addPointButton').disabled = false;
-                geodesic = L.geodesic([lastMarker.getLatLng(), markerFromDB.getLatLng()], { // между точкой (по клику) и из БД
-                    weight: 3,
-                    opacity: 1,
-                    color: 'blue',
-                    steps: 50
-                }).addTo(map);
+               updateGeodesicAndCalculations();
+           });
 
-                // Выполнение расчетов
-                performCalculations();
-            };
-            if (thirdMarker) {
-                if (thirdGeodesic) {
-                    map.removeLayer(thirdGeodesic);
-                }
-                thirdGeodesic = L.geodesic([lastMarker.getLatLng(), thirdMarker.getLatLng()], {
-                    weight: 3,
-                    opacity: 1,
-                    color: 'red',
-                    steps: 50
-                }).addTo(map);
+       };
+       // Иконка для третьего маркера
+       const thirdMarkerIcon = L.icon({
+           iconUrl: 'data/alert.png',
+           iconSize: [25, 25],
+           iconAnchor: [12.5, 12.5],
+       });
 
-                somethingCalcuiation()
-            };
-        };
+       // Вызов функции после ее определения
+       updateGeodesicAndCalculationsWithThirdMarker();
 
-        function updateGeodesicAndCalculationsWithThirdMarker() {
-            document.getElementById('addPointButton').addEventListener('click', function() {
-                // Очищаем results2 при нажатии на кнопку
-                document.getElementById('results2').innerHTML = '';
-                const newPointLatLng = lastMarker ? lastMarker.getLatLng() : null;
+       function performCalculations() {
+           if (lastMarker && markerFromDB) {
+               const lat1 = lastMarker.getLatLng().lat;
+               const lon1 = lastMarker.getLatLng().lng;
+               const satLat = markerFromDB.getLatLng().lat;
+               const satLon = markerFromDB.getLatLng().lng;
+               const toDegrees = (radians) => radians * (180 / Math.PI);
+               const rad = Math.PI / 180;
 
-                if (thirdMarker) {
-                    // Удаляем третий маркер и геодезическую линию
-                    map.removeLayer(thirdMarker);
-                    thirdMarker = null;
+               // Угол места
+               const angle = Math.atan((Math.cos(lon1 * rad - satLon * rad) * Math.cos(lat1 * rad) - 0.151) / Math.sqrt(1 - Math.pow(Math.cos(lon1 * rad - satLon * rad), 2) * Math.pow(Math.cos(lat1 * rad), 2))) / rad;
+               const elevationAngleText = `Угол места: ${angle.toFixed(2)}°`;
 
-                    if (thirdGeodesic) {
-                        map.removeLayer(thirdGeodesic);
-                        thirdGeodesic = null;
-                    }
-                } else if (newPointLatLng) {
-                    // Создаем третий маркер
-                    thirdMarker = L.marker(newPointLatLng, {
-                        draggable: true,
-                        icon: thirdMarkerIcon
-                    }).addTo(map);
-                    thirdMarker.on('drag', updateGeodesicAndCalculations);
-                }
+               // Угол поворота конвектора
+               const convectorAngle = (Math.atan(Math.sin(lon1 * rad - satLon * rad) / Math.tan(lat1 * rad))) / rad;
+               const convectorAngleText = `Угол поворота конвектора: ${convectorAngle.toFixed(2)}°`;
 
-                updateGeodesicAndCalculations();
-            });
+               // Истинный азимут
+               const TrueAzimuth = Math.atan2(Math.sin((satLon - lon1) * rad) * Math.cos(satLat * rad), Math.cos(lat1 * rad) * Math.sin(satLat * rad) - Math.sin(lat1 * rad) * Math.cos(satLat * rad) * Math.cos((satLon - lon1) * rad));
+               const TrueAzimuthD = (toDegrees(TrueAzimuth) + 360) % 360;
+               const TrueAzimuthText = `Истинный азимут: ${TrueAzimuthD.toFixed(2)}°`;
 
-        };
-        // Иконка для третьего маркера
-        const thirdMarkerIcon = L.icon({
-            iconUrl: 'data/alert.png',
-            iconSize: [25, 25],
-            iconAnchor: [12.5, 12.5],
-        });
+               // Магнитный азимут
+               const geomagData = geomag.field(lat1, lon1);
+               const magneticDeclination = geomagData.declination;
+               const MagneticAzimuth = (TrueAzimuthD - magneticDeclination + 360) % 360;
+               const MagneticAzimuthText = `Магнитный азимут: ${MagneticAzimuth.toFixed(2)}°`;
 
-        // Вызов функции после ее определения
-        updateGeodesicAndCalculationsWithThirdMarker();
+               // Обновление результатов на странице
+               const resultsContainer = document.getElementById('results');
+               resultsContainer.innerHTML = `
+                           <div class="result-item">${elevationAngleText}</div>
+                           <div class="result-item">${convectorAngleText}</div>
+                           <div class="result-item">${TrueAzimuthText}</div>
+                           <div class="result-item">${MagneticAzimuthText}</div>
+                       `;
+           } else {
+               alert('Точки для расчета не выбраны.');
+           };
+       };
 
-        function performCalculations() {
-            if (lastMarker && markerFromDB) {
-                const lat1 = lastMarker.getLatLng().lat;
-                const lon1 = lastMarker.getLatLng().lng;
-                const satLat = markerFromDB.getLatLng().lat;
-                const satLon = markerFromDB.getLatLng().lng;
-                const toDegrees = (radians) => radians * (180 / Math.PI);
-                const rad = Math.PI / 180;
+       function somethingCalcuiation(angle) {
+           if (lastMarker && markerFromDB) {
+               const lat1 = lastMarker.getLatLng().lat;
+               const lon1 = lastMarker.getLatLng().lng;
+               const satLon = markerFromDB.getLatLng().lng;
+               const rad = Math.PI / 180;
 
-                // Угол места
-                const angle = Math.atan((Math.cos(lon1 * rad - satLon * rad) * Math.cos(lat1 * rad) - 0.151) / Math.sqrt(1 - Math.pow(Math.cos(lon1 * rad - satLon * rad), 2) * Math.pow(Math.cos(lat1 * rad), 2))) / rad;
-                const elevationAngleText = `Угол места: ${angle.toFixed(2)}°`;
+               const angle = Math.atan((Math.cos(lon1 * rad - satLon * rad) * Math.cos(lat1 * rad) - 0.151) / Math.sqrt(1 - Math.pow(Math.cos(lon1 * rad - satLon * rad), 2) * Math.pow(Math.cos(lat1 * rad), 2))) / rad;
+               const distance = lastMarker.getLatLng().distanceTo(thirdMarker.getLatLng());
+               const angleInRadians = angle * (Math.PI / 180);
 
-                // Угол поворота конвектора
-                const convectorAngle = (Math.atan(Math.sin(lon1 * rad - satLon * rad) / Math.tan(lat1 * rad))) / rad;
-                const convectorAngleText = `Угол поворота конвектора: ${convectorAngle.toFixed(2)}°`;
+               // Вычисляем высоту
+               const height = distance * Math.tan(angleInRadians);
 
-                // Истинный азимут
-                const TrueAzimuth = Math.atan2(Math.sin((satLon - lon1) * rad) * Math.cos(satLat * rad), Math.cos(lat1 * rad) * Math.sin(satLat * rad) - Math.sin(lat1 * rad) * Math.cos(satLat * rad) * Math.cos((satLon - lon1) * rad));
-                const TrueAzimuthD = (toDegrees(TrueAzimuth) + 360) % 360;
-                const TrueAzimuthText = `Истинный азимут: ${TrueAzimuthD.toFixed(2)}°`;
-
-                // Магнитный азимут
-                const geomagData = geomag.field(lat1, lon1);
-                const magneticDeclination = geomagData.declination;
-                const MagneticAzimuth = (TrueAzimuthD - magneticDeclination + 360) % 360;
-                const MagneticAzimuthText = `Магнитный азимут: ${MagneticAzimuth.toFixed(2)}°`;
-
-                // Обновление результатов на странице
-                const resultsContainer = document.getElementById('results');
-                resultsContainer.innerHTML = `
-                            <div class="result-item">${elevationAngleText}</div>
-                            <div class="result-item">${convectorAngleText}</div>
-                            <div class="result-item">${TrueAzimuthText}</div>
-                            <div class="result-item">${MagneticAzimuthText}</div>
-                        `;
-            } else {
-                alert('Точки для расчета не выбраны.');
-            };
-        };
-
-        function somethingCalcuiation(angle) {
-            if (lastMarker && markerFromDB) {
-                const lat1 = lastMarker.getLatLng().lat;
-                const lon1 = lastMarker.getLatLng().lng;
-                const satLon = markerFromDB.getLatLng().lng;
-                const rad = Math.PI / 180;
-
-                const angle = Math.atan((Math.cos(lon1 * rad - satLon * rad) * Math.cos(lat1 * rad) - 0.151) / Math.sqrt(1 - Math.pow(Math.cos(lon1 * rad - satLon * rad), 2) * Math.pow(Math.cos(lat1 * rad), 2))) / rad;
-                const distance = lastMarker.getLatLng().distanceTo(thirdMarker.getLatLng());
-                const angleInRadians = angle * (Math.PI / 180);
-
-                // Вычисляем высоту
-                const height = distance * Math.tan(angleInRadians);
-
-                const resultsContainer = document.getElementById('results2');
-                resultsContainer.innerHTML = `
-                            <div class="result-item">Высота препятствия: ${height.toFixed(2)} метров</div>
-                            <div class="result-item">Расстояние до препятствия: ${distance.toFixed(2)} метров</div>
-                        `;
-            } else {
-                alert('Точки для расчета не выбраны.');
-            };
-        };
+               const resultsContainer = document.getElementById('results2');
+               resultsContainer.innerHTML = `
+                           <div class="result-item">Высота препятствия: ${height.toFixed(2)} метров</div>
+                           <div class="result-item">Расстояние до препятствия: ${distance.toFixed(2)} метров</div>
+                       `;
+           } else {
+               alert('Точки для расчета не выбраны.');
+           };
+       };
