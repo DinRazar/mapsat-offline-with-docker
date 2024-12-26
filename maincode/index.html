@@ -28,10 +28,10 @@
         <div id="results"></div>
         <div id="results1"></div>
         <button id="addPointButton" disabled>Расчёт препятсвия</button>
-        <!-- <button id="manualInputButton">Ввести координаты и высоту</button> -->
+        <button id="manualInputButton">Ввести координаты и высоту</button>
         <div id="results2"></div>
     </div>
-    <!-- <div id="modal1" style="display: none;">
+    <div id="modal1" style="display: none;">
         <div>
             <label for="inputLat">Широта:</label>
             <input type="text" id="inputLat" placeholder="Введите широту">
@@ -40,14 +40,10 @@
             <label for="inputLng">Долгота:</label>
             <input type="text" id="inputLng" placeholder="Введите долготу">
         </div>
-        <div>
-            <label for="inputHeight">Высота:</label>
-            <input type="text" id="inputHeight" placeholder="Введите высоту">
-        </div>
         <button id="autoDetectionButton">Автоопределние координат</button>
-        <button id="submitCoordinates">Подтвердить</button>\
+        <button id="submitCoordinates">Подтвердить</button>
         <button id="closeModal1">Зарыть</button>
-    </div> -->
+    </div>
     <!-- Карта -->
     <div id="map"></div>
     <!-- Библиотека leaflet для онлайн расчётов -->
@@ -94,53 +90,167 @@
         let geodesic; // переменная для геодезической линии между lastMarker и markerFromDB
         let thirdMarker; // переменная для маркера дрона
         let thirdGeodesic; // переменная для геодезической линии между lastMarker и thirdMarker
-        let elevationValue;
+        let elevationValue; // переменная для значения высоты
 
-        // обработчик нажатия по карте
+        // Создание маркера по клику на карте
         map.on('click', function(e) {
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
 
-            // создание маркера 
+            // Установка нового маркера
             if (lastMarker) {
-                map.removeLayer(lastMarker);
+                map.removeLayer(lastMarker); // Удаляем предыдущий маркер
             }
 
             lastMarker = L.marker([lat, lng], {
                 draggable: true
             }).addTo(map);
+            // lastMarker.bindPopup(`Координаты: ${lat.toFixed(4)}, ${lng.toFixed(4)}`).openPopup();
+            // map.setView([lat, lng], 11);
 
-            // Отправка координат на сервер
-            fetch('http://localhost:3000/api/getElevation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        latitude: lat,
-                        longitude: lng
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Отсутствует подключение');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    elevationValue = data.elevation;
-                    // alert(`Высота: ${elevationValue}`);
-                    // Привязываем всплывающее окно к маркеру (по умолчанию закрыто)
-                    lastMarker.bindPopup(`Координаты: ${lat}, ${lng}<br>Высота: ${elevationValue || 'неизвестна'}`);
-                })
-                .catch(error => {
-                    console.error('Ошибка:', error);
-                    alert('Ошибка при получении высоты');
-                })
+            // Обновляем значения в inputLat и inputLng
+            document.getElementById('inputLat').value = lat.toFixed(4);
+            document.getElementById('inputLng').value = lng.toFixed(4);
 
-            lastMarker.on('drag', updateGeodesicAndCalculations);
+            // Обновляем геодезическую линию
             updateGeodesicAndCalculations();
+
+            // Добавляем возможность перетаскивания маркера
+            lastMarker.on('drag', updateGeodesicAndCalculations);
+
+            // Обработчик клика на маркер для отображения его координат
+            lastMarker.on('drag', function() {
+                const currentLatLng = lastMarker.getLatLng();
+                // lastMarker.bindPopup(`Координаты: ${currentLatLng.lat.toFixed(4)}, ${currentLatLng.lng.toFixed(4)}`).openPopup();
+                document.getElementById('inputLat').value = currentLatLng.lat.toFixed(4);
+                document.getElementById('inputLng').value = currentLatLng.lng.toFixed(4);
+            });
         });
+        document.getElementById('manualInputButton').addEventListener('click', function() {
+            document.getElementById('modal1').style.display = 'block';
+        });
+
+        // Закрытие модального окна
+        document.getElementById('closeModal1').addEventListener('click', function() {
+            document.getElementById('modal1').style.display = 'none';
+        });
+
+
+        // Автоопределение координат
+        document.getElementById('autoDetectionButton').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    // Установка координат маркера
+                    if (lastMarker) {
+                        map.removeLayer(lastMarker);
+                    }
+
+                    lastMarker = L.marker([lat, lng], {
+                        draggable: true
+                    }).addTo(map);
+                    // lastMarker.bindPopup(`Координаты: ${lat.toFixed(4)}, ${lng.toFixed(4)}`).openPopup();
+                    map.setView([lat, lng], 11);
+
+                    // Обновляем значения в inputLat и inputLng
+                    document.getElementById('inputLat').value = lat.toFixed(4);
+                    document.getElementById('inputLng').value = lng.toFixed(4);
+
+                    updateGeodesicAndCalculations(); // Обновление геодезической линии
+
+                    // Добавляем возможность перетаскивания маркера
+                    lastMarker.on('drag', updateGeodesicAndCalculations);
+                    lastMarker.on('dragend', function() {
+                        const currentLatLng = lastMarker.getLatLng();
+                        // Обновляем координаты маркера
+                        // console.log(`Обновленные координаты: ${currentLatLng.lat.toFixed(4)}, ${currentLatLng.lng.toFixed(4)}`);
+                        // lastMarker.bindPopup(`Координаты: ${currentLatLng.lat.toFixed(4)}, ${currentLatLng.lng.toFixed(4)}`).openPopup();
+
+                        document.getElementById('inputLat').value = currentLatLng.lat.toFixed(4);
+                        document.getElementById('inputLng').value = currentLatLng.lng.toFixed(4);
+
+                        updateGeodesicAndCalculations(); // Обновление геодезической линии
+                    });
+                }, function() {
+                    alert("Не удалось получить местоположение.");
+                });
+            } else {
+                alert("Геолокация не поддерживается вашим браузером.");
+            }
+        });
+
+        // Подтверждение введенных координат
+        document.getElementById('submitCoordinates').addEventListener('click', function() {
+            const lat = parseFloat(document.getElementById('inputLat').value);
+            const lng = parseFloat(document.getElementById('inputLng').value);
+
+            if (!isNaN(lat) && !isNaN(lng)) {
+                if (lastMarker) {
+                    map.removeLayer(lastMarker);
+                }
+
+                lastMarker = L.marker([lat, lng], {
+                    draggable: true
+                }).addTo(map);
+                // lastMarker.bindPopup(`Координаты: ${lat.toFixed(4)}, ${lng.toFixed(4)}`).openPopup();
+                map.setView([lat, lng], 8);
+
+                // Обновляем значения в inputLat и inputLng
+                document.getElementById('inputLat').value = lat.toFixed(4);
+                document.getElementById('inputLng').value = lng.toFixed(4);
+
+                updateGeodesicAndCalculations(); // Обновление геодезической линии
+
+                // Добавляем возможность перетаскивания маркера
+                lastMarker.on('drag', updateGeodesicAndCalculations);
+                lastMarker.on('dragend', function() {
+                    const currentLatLng = lastMarker.getLatLng();
+                    // Обновляем координаты маркера
+                    // console.log(`Обновленные координаты: ${currentLatLng.lat.toFixed(4)}, ${currentLatLng.lng.toFixed(4)}`);
+                    // lastMarker.bindPopup(`Координаты: ${currentLatLng.lat.toFixed(4)}, ${currentLatLng.lng.toFixed(4)}`).openPopup();
+
+                    // Обновляем значения в inputLat и inputLng при перетаскивании
+                    document.getElementById('inputLat').value = currentLatLng.lat.toFixed(4);
+                    document.getElementById('inputLng').value = currentLatLng.lng.toFixed(4);
+
+                    updateGeodesicAndCalculations(); // Обновление геодезической линии
+                });
+            } else {
+                alert("Пожалуйста, введите корректные координаты.");
+            }
+        });
+
+        // // Отправка координат на сервер
+        // fetch('http://localhost:3000/api/getElevation', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json'
+        //         },
+        //         body: JSON.stringify({
+        //             latitude: lat,
+        //             longitude: lng
+        //         })
+        //     })
+        //     .then(response => {
+        //         if (!response.ok) {
+        //             throw new Error('Отсутствует подключение');
+        //         }
+        //         return response.json();
+        //     })
+        //     .then(data => {
+        //         elevationValue = data.elevation;
+        //         // alert(`Высота: ${elevationValue}`);
+        //         // Привязываем всплывающее окно к маркеру (по умолчанию закрыто)
+        //         lastMarker.bindPopup(`Координаты: ${lat}, ${lng}<br>Высота: ${elevationValue || 'неизвестна'}`);
+        //     })
+        //     .catch(error => {
+        //         console.error('Ошибка:', error);
+        //         alert('Ошибка при получении высоты');
+        //     })
+
+
 
         // Данные подгружаются с сервера
         fetch('http://localhost:3000/data')
@@ -308,10 +418,10 @@
             };
         };
 
-        //Обработчик клика маркера для открытия всплывающего окна
-        lastMarker.on('click', function() {
-            lastMarker.openPopup();
-        });
+        // //Обработчик клика маркера для открытия всплывающего окна
+        // lastMarker.on('click', function() {
+        //     lastMarker.openPopup();
+        // });
     </script>
     <!-- подключение скрипта с кодом -->
     <!-- <script src="./main.js"></script> -->
