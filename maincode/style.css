@@ -119,6 +119,29 @@ body {
     /* Цвет фона при наведении */
 }
 
+#manualInputButton {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    /* width: calc(20% - 10px); */
+    background: #f0f0f0;
+    font-family: inherit !important;
+    align-items: center;
+    box-shadow: 0px 2px 4px rgba(110, 106, 106, 0.1);
+    /* Тень */
+}
+
+#manualInputButton:hover {
+    background: #e0e0e0;
+    /* Цвет фона при наведении */
+}
+
 #results {
     margin-top: 10px;
     font-weight: bold;
@@ -143,6 +166,12 @@ body {
     justify-content: space-around;
 }
 
+#manualbtn {
+    display: flex;
+    gap: 15px;
+    cursor: pointer;
+}
+
 .result-item {
     margin: 5px;
     padding: 10px;
@@ -152,21 +181,6 @@ body {
     /* Ширина с учётом отступов */
     box-shadow: 0px 2px 4px rgba(110, 106, 106, 0.1);
 }
-
-
-/* 
-.dropdown-container {
-    margin-right: 10px;
-}
-
-.styled-dropdown {
-    padding: 5px;
-    font-size: 14px;
-}
-
-.small-dropdown {
-    width: 100px;
-} */
 
 .leaflet-control-layers {
     background: white;
@@ -184,4 +198,45 @@ body {
     padding: 20px;
     border: 1px solid black;
     z-index: 1000;
+}
+
+#autoDetectionButton {
+    cursor: pointer;
+}
+
+#submitCoordinates {
+    cursor: pointer;
+}
+
+#closeModal1 {
+    cursor: pointer;
+}
+
+.button-group {
+    position: absolute;
+    top: 1%;
+    left: 5%;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.button-group button {
+    margin: 5px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    /* Цвет по умолчанию */
+    transition: background-color 0.3s;
+}
+
+.button-group button.active {
+    background-color: #007bff;
+    /* Цвет для активной кнопки */
+    color: white;
+    /* Цвет текста для активной кнопки */
 }

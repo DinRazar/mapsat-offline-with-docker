@@ -27,8 +27,12 @@
         <!-- Контейнер для результатов -->
         <div id="results"></div>
         <div id="results1"></div>
-        <button id="addPointButton" disabled>Расчёт препятсвия</button>
-        <button id="manualInputButton">Ввести координаты и высоту</button>
+        <div id="manualbtn">
+            <button id="addPointButton" disabled>Расчёт препятсвия</button>
+            <button id="manualInputButton">Ввести координаты</button>
+        </div>
+        <!-- <button id="addPointButton" disabled>Расчёт препятсвия</button>
+        <button id="manualInputButton">Ввести координаты и высоту</button> -->
         <div id="results2"></div>
     </div>
     <div id="modal1" style="display: none;">
@@ -40,12 +44,19 @@
             <label for="inputLng">Долгота:</label>
             <input type="text" id="inputLng" placeholder="Введите долготу">
         </div>
-        <button id="autoDetectionButton">Автоопределние координат</button>
-        <button id="submitCoordinates">Подтвердить</button>
-        <button id="closeModal1">Зарыть</button>
+        <div id="modalbtns">
+            <button id="autoDetectionButton">Автоопределние координат</button>
+            <button id="submitCoordinates">Подтвердить</button>
+            <button id="closeModal1">Зарыть</button>
+        </div>
     </div>
     <!-- Карта -->
-    <div id="map"></div>
+    <div id="map">
+        <div class="button-group">
+            <button id="offlineBtn">Оффлайн</button>
+            <button id="onlineBtn">Онлайн</button>
+        </div>
+    </div>
     <!-- Библиотека leaflet для онлайн расчётов -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <!-- Библиотека для геодезических расчётов -->
@@ -72,18 +83,53 @@
 
         // Добавляем оффлайн слой по умолчанию
         offlineLayer.addTo(map);
+        document.getElementById('offlineBtn').classList.add('active'); // Выделяем оффлайн кнопку
 
-        // Создаем контрол для переключения слоев
-        var baseLayers = {
-            "Оффлайн": offlineLayer,
-            "Онлайн": onlineLayer
-        };
 
-        var layerControl = L.control.layers(baseLayers).addTo(map);
-        layerControl.setPosition('topright'); // Позиция в правом верхнем углу
+        // // Создаем контрол для переключения слоев
+        // var baseLayers = {
+        //     "Оффлайн": offlineLayer,
+        //     "Онлайн": onlineLayer
+        // };
+        // var layerControl = L.control.layers(baseLayers).addTo(map);
 
         // отключение флага, что?
         map.attributionControl.setPrefix(false)
+
+        // Обработчики для кнопок
+        document.getElementById('offlineBtn').onclick = function(event) {
+            event.stopPropagation(); // Предотвращаем всплытие события клика
+            map.removeLayer(onlineLayer); // Убираем онлайн слой
+            offlineLayer.addTo(map); // Добавляем оффлайн слой
+
+            // Выделяем активную кнопку
+            this.classList.add('active');
+            document.getElementById('onlineBtn').classList.remove('active');
+        };
+
+        document.getElementById('onlineBtn').onclick = function(event) {
+            event.stopPropagation(); // Предотвращаем всплытие события клика
+
+            map.removeLayer(offlineLayer); // Убираем оффлайн слой
+            onlineLayer.addTo(map); // Добавляем онлайн слой
+
+            // Выделяем активную кнопку
+            this.classList.add('active');
+            document.getElementById('offlineBtn').classList.remove('active');
+
+            // Проверяем доступность онлайн слоя
+            onlineLayer.on('load', function() {
+                // Успешная загрузка, ничего не делаем
+            });
+
+            onlineLayer.on('error', function() {
+                alert("Ошибка: Не удалось загрузить онлайн-карту!"); // Показываем alert при ошибке
+                map.removeLayer(onlineLayer); // Убираем онлайн слой при ошибке
+                offlineLayer.addTo(map); // Возвращаем оффлайн слой
+                document.getElementById('offlineBtn').classList.add('active'); // Выделяем оффлайн кнопку
+                document.getElementById('onlineBtn').classList.remove('active'); // Убираем выделение с онлайн кнопки
+            });
+        };
 
         let lastMarker; // переменная для маркера, создающегося по клику
         let markerFromDB; // переменная для маркера из базы данных
@@ -126,9 +172,23 @@
                 document.getElementById('inputLng').value = currentLatLng.lng.toFixed(4);
             });
         });
+
+        // Открытие и закрытие окна для ручного указания координта Modal1
         document.getElementById('manualInputButton').addEventListener('click', function() {
-            document.getElementById('modal1').style.display = 'block';
+            // Если окно Modal1 закрыто, то открываем его
+            if (document.getElementById('modal1').style.display == 'none') {
+                document.getElementById('modal1').style.display = 'block';
+            } else {
+                // Закрываем окно Modal1, если оно открыто
+                document.getElementById('modal1').style.display = 'none';
+            }
         });
+
+        // Без проверки
+        // Закрытие модального окна
+        // document.getElementById('manualInputButton').addEventListener('click', function() {
+        //     document.getElementById('modal1').style.display = 'block';
+        // });
 
         // Закрытие модального окна
         document.getElementById('closeModal1').addEventListener('click', function() {
@@ -222,36 +282,6 @@
             }
         });
 
-        // // Отправка координат на сервер
-        // fetch('http://localhost:3000/api/getElevation', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json'
-        //         },
-        //         body: JSON.stringify({
-        //             latitude: lat,
-        //             longitude: lng
-        //         })
-        //     })
-        //     .then(response => {
-        //         if (!response.ok) {
-        //             throw new Error('Отсутствует подключение');
-        //         }
-        //         return response.json();
-        //     })
-        //     .then(data => {
-        //         elevationValue = data.elevation;
-        //         // alert(`Высота: ${elevationValue}`);
-        //         // Привязываем всплывающее окно к маркеру (по умолчанию закрыто)
-        //         lastMarker.bindPopup(`Координаты: ${lat}, ${lng}<br>Высота: ${elevationValue || 'неизвестна'}`);
-        //     })
-        //     .catch(error => {
-        //         console.error('Ошибка:', error);
-        //         alert('Ошибка при получении высоты');
-        //     })
-
-
-
         // Данные подгружаются с сервера
         fetch('http://localhost:3000/data')
             .then(response => response.json())
@@ -281,6 +311,34 @@
                     })
                     .catch(error => console.error('Ошибка загрузки данных:', error));
             });
+
+        // // Отправка координат на сервер
+        // fetch('http://localhost:3000/api/getElevation', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json'
+        //         },
+        //         body: JSON.stringify({
+        //             latitude: lat,
+        //             longitude: lng
+        //         })
+        //     })
+        //     .then(response => {
+        //         if (!response.ok) {
+        //             throw new Error('Отсутствует подключение');
+        //         }
+        //         return response.json();
+        //     })
+        //     .then(data => {
+        //         elevationValue = data.elevation;
+        //         alert(`Высота: ${elevationValue}`);
+        //         // Привязываем всплывающее окно к маркеру (по умолчанию закрыто)
+        //         lastMarker.bindPopup(`Координаты: ${lat}, ${lng}<br>Высота: ${elevationValue || 'неизвестна'}`);
+        //     })
+        //     .catch(error => {
+        //         console.error('Ошибка:', error);
+        //         alert('Ошибка при получении высоты');
+        //     })
 
         // функция для создания геодезических линий
         function updateGeodesicAndCalculations() {
