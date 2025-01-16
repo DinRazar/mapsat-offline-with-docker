@@ -133,6 +133,61 @@
         let elevationValue; // переменная для значения высоты
         let lat, lng; // переменная для хранения значений широты и долготы
 
+        // Функция для сохранения маркеров и геодезических линий в sessionStorage
+        function saveToSessionStorage() {
+            const markersData = {
+                lastMarker: lastMarker ? lastMarker.getLatLng() : null,
+                markerFromDB: markerFromDB ? markerFromDB.getLatLng() : null,
+                thirdMarker: thirdMarker ? thirdMarker.getLatLng() : null,
+            };
+            const geodesicData = {
+                geodesic: geodesic ? [lastMarker.getLatLng(), markerFromDB.getLatLng()] : null,
+                thirdGeodesic: thirdGeodesic ? [lastMarker.getLatLng(), thirdMarker.getLatLng()] : null,
+            };
+            sessionStorage.setItem('markers', JSON.stringify(markersData));
+            sessionStorage.setItem('geodesics', JSON.stringify(geodesicData));
+        }
+
+        // Функция для сохранения маркеров и геодезических линий в sessionStorage
+        function loadFromSessionStorage() {
+            const markersData = JSON.parse(sessionStorage.getItem('markers'));
+            const geodesicData = JSON.parse(sessionStorage.getItem('geodesics'));
+
+            if (markersData && markersData.lastMarker) {
+                lastMarker = L.marker([markersData.lastMarker.lat, markersData.lastMarker.lng]).addTo(map);
+            }
+
+            if (markersData && markersData.markerFromDB) {
+                markerFromDB = L.marker([markersData.markerFromDB.lat, markersData.markerFromDB.lng]).addTo(map);
+            }
+
+            if (markersData && markersData.thirdMarker) {
+                thirdMarker = L.marker([markersData.thirdMarker.lat, markersData.thirdMarker.lng]).addTo(map);
+            }
+
+            if (geodesicData && geodesicData.geodesic) {
+                geodesic = L.geodesic(geodesicData.geodesic, {
+                    weight: 3,
+                    opacity: 1,
+                    color: 'blue',
+                    steps: 50
+                }).addTo(map);
+            }
+
+            if (geodesicData && geodesicData.thirdGeodesic) {
+                thirdGeodesic = L.geodesic(geodesicData.thirdGeodesic, {
+                    weight: 3,
+                    opacity: 1,
+                    color: 'red',
+                    steps: 50
+                }).addTo(map);
+            }
+        }
+
+        window.onload = function() {
+            loadFromSessionStorage();
+        }
+
         // Создание маркера по клику на карте
         map.on('click', function(e) {
             const lat = e.latlng.lat;
@@ -157,9 +212,11 @@
             updateGeodesicAndCalculations();
 
             sendCoordinatesToServer(lat, lng);
+            saveToSessionStorage();
 
             // Добавляем возможность перетаскивания маркера
             lastMarker.on('drag', updateGeodesicAndCalculations);
+            saveToSessionStorage();
 
             // Обработчик клика на маркер для отображения его координат
             lastMarker.on('drag', function() {
@@ -218,6 +275,7 @@
                     updateGeodesicAndCalculations(); // Обновление геодезической линии
 
                     sendCoordinatesToServer(lat, lng);
+                    saveToSessionStorage();
 
                     // Добавляем возможность перетаскивания маркера
                     lastMarker.on('drag', updateGeodesicAndCalculations);
@@ -231,6 +289,7 @@
                         document.getElementById('inputLng').value = currentLatLng.lng.toFixed(4);
 
                         updateGeodesicAndCalculations(); // Обновление геодезической линии
+                        saveToSessionStorage();
                     });
                 }, function() {
                     alert("Не удалось получить местоположение.");
@@ -244,6 +303,7 @@
         document.getElementById('submitCoordinates').addEventListener('click', function() {
             const lat = parseFloat(document.getElementById('inputLat').value);
             const lng = parseFloat(document.getElementById('inputLng').value);
+
 
             if (!isNaN(lat) && !isNaN(lng)) {
                 if (lastMarker) {
@@ -261,6 +321,7 @@
                 document.getElementById('inputLng').value = lng.toFixed(4);
 
                 updateGeodesicAndCalculations(); // Обновление геодезической линии
+                saveToSessionStorage();
 
                 sendCoordinatesToServer(lat, lng);
 
@@ -277,6 +338,8 @@
                     document.getElementById('inputLng').value = currentLatLng.lng.toFixed(4);
 
                     updateGeodesicAndCalculations(); // Обновление геодезической линии
+                    saveToSessionStorage();
+
                 });
             } else {
                 alert("Пожалуйста, введите корректные координаты.");
@@ -309,7 +372,7 @@
                 })
                 .catch(error => {
                     console.error('Ошибка:', error);
-                    alert('Ошибка при получении высоты');
+                    // alert('Ошибка при получении высоты');
                 })
         }
 
@@ -338,7 +401,7 @@
 
                         markerFromDB = L.marker([latitude, longitude]).addTo(map).bindPopup(selectedOption.textContent);
                         updateGeodesicAndCalculations();
-
+                        saveToSessionStorage();
                     })
                     .catch(error => console.error('Ошибка загрузки данных:', error));
             });
@@ -361,6 +424,7 @@
 
                 // Выполнение расчетов
                 performCalculations();
+                saveToSessionStorage();
             };
             if (thirdMarker) {
                 if (thirdGeodesic) {
@@ -373,7 +437,8 @@
                     steps: 50
                 }).addTo(map);
 
-                somethingCalcuiation()
+                somethingCalcuiation();
+                saveToSessionStorage();
             };
         };
 
@@ -399,9 +464,11 @@
                         icon: thirdMarkerIcon
                     }).addTo(map);
                     thirdMarker.on('drag', updateGeodesicAndCalculations);
+                    saveToSessionStorage();
                 }
 
                 updateGeodesicAndCalculations();
+                saveToSessionStorage();
             });
 
         };
