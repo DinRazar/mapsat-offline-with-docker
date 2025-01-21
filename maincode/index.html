@@ -5,36 +5,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapsat-offline</title>
-    <script src="./geomag-master/dist/geomag.min.js"></script>
     <!-- Библиотека для геомагнитных рассчётов -->
-    <script src="./libs/dist/leaflet.js"></script>
+    <script src="./geomag-master/dist/geomag.min.js"></script>
     <!-- Библиотека leaflet для оффлайн расчётов -->
+    <script src="./libs/dist/leaflet.js"></script>
     <script src="./libs/dist/leaflet-measure.js"></script>
+    <!-- leaflet стили -->
     <link rel="stylesheet" href="./libs/dist/leaflet.css">
     <link rel="stylesheet" href="./libs/dist/leaflet-measure.css">
+    <!-- Мои стили -->
     <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
+    <!-- Контейнер с реузльтатми вычислений -->
     <div id="controls">
-        <!-- <select id="modeSwitch" class="styled-dropdown">
-            <option value="offline">Оффлайн</option>
-            <option value="online">Онлайн</option>
-        </select> -->
         <select id="dataDropdown" class="styled-dropdown">
         <option value="" disabled selected hidden> Выберите спутник </option>
         </select>
         <!-- Контейнер для результатов -->
         <div id="results"></div>
-        <div id="results1"></div>
+        <!-- Окно для ручного указания координат -->
         <div id="manualbtn">
             <button id="addPointButton" disabled>Расчёт препятсвия</button>
             <button id="manualInputButton">Ввести координаты</button>
         </div>
-        <!-- <button id="addPointButton" disabled>Расчёт препятсвия</button>
+        <!-- Это пока неадо, вдруг мы еще вернёмся к ручному указанию коорбинат
+        <button id="addPointButton" disabled>Расчёт препятсвия</button>
         <button id="manualInputButton">Ввести координаты и высоту</button> -->
         <div id="results2"></div>
     </div>
+    <!-- Контейнер с модальным окном для координат -->
     <div id="modal1" style="display: none;">
         <div>
             <label for="inputLat">Широта:</label>
@@ -45,7 +46,6 @@
             <input type="text" id="inputLng" placeholder="Введите долготу">
         </div>
         <div id="modalbtns">
-
             <button id="submitCoordinates">Подтвердить</button>
             <button id="automatic">Автоопределение</button>
             <button id="closeModal1">Зарыть</button>
@@ -87,7 +87,7 @@
         document.getElementById('offlineBtn').classList.add('active'); // Выделяем оффлайн кнопку
 
 
-        // // Создаем контрол для переключения слоев
+        // Создаем контрол для переключения слоев через leaflet (может ещё понадобится)
         // var baseLayers = {
         //     "Оффлайн": offlineLayer,
         //     "Онлайн": onlineLayer
@@ -97,7 +97,7 @@
         // отключение флага, что?
         map.attributionControl.setPrefix(false)
 
-        // Обработчики для кнопок
+        // Обработчики для кнопок переключения оффлайн/онлайн слоя (тут есть баг из-за которого происходит нажатие карту, надо убрать, но я не знаю, как)
         document.getElementById('offlineBtn').onclick = function(event) {
             event.stopPropagation(); // Предотвращаем всплытие события клика
             map.removeLayer(onlineLayer); // Убираем онлайн слой
@@ -126,14 +126,16 @@
             }
         });
 
+        // основные переменные, используемы е в проекте 
         let lastMarker; // переменная для маркера, создающегося по клику
         let markerFromDB; // переменная для маркера из базы данных
         let geodesic; // переменная для геодезической линии между lastMarker и markerFromDB
         let thirdMarker; // переменная для маркера дрона
         let thirdGeodesic; // переменная для геодезической линии между lastMarker и thirdMarker
         let elevationValue; // переменная для значения высоты
-        let lat, lng; // переменная для хранения значений широты и долготы
+        let lat, lng; // переменнве для хранения значений широты и долготы
 
+        // ПОКА ДАННАЯ ФУНКЦИЯ НЕ ИСПОЛЬЗУЕТСЯ В СВЯЗИ С ТЕМ, ЧТО РАБОТАЕТ КРИВО И МНЕ НЕ НРАВИТСЯ И НИКОМУ НЕ НРАВИТСЯ И ВООБЩЕ Я ХОЧУ ДОМОЙ, ПОМОГИТЕ!!!...
         // Функция для сохранения маркеров и геодезических линий в sessionStorage
         function saveToSessionStorage() {
             const markersData = {
@@ -185,9 +187,9 @@
             }
         }
 
-        window.onload = function() {
-            loadFromSessionStorage();
-        }
+        // window.onload = function() {
+        //     loadFromSessionStorage();
+        // }
 
         // Создание маркера по клику на карте
         map.on('click', function(e) {
@@ -198,7 +200,6 @@
             if (lastMarker) {
                 map.removeLayer(lastMarker); // Удаляем предыдущий маркер
             }
-
             lastMarker = L.marker([lat, lng], {
                 draggable: true
             }).addTo(map);
@@ -239,7 +240,7 @@
             }
         });
 
-        // Без проверки
+        // Без проверки (Что-то я не помню, пусть остаётся)
         // Закрытие модального окна
         // document.getElementById('manualInputButton').addEventListener('click', function() {
         //     document.getElementById('modal1').style.display = 'block';
@@ -249,7 +250,6 @@
         document.getElementById('closeModal1').addEventListener('click', function() {
             document.getElementById('modal1').style.display = 'none';
         });
-
 
         // Автоопределение координат
         document.getElementById('automatic').addEventListener('click', function() {
@@ -262,7 +262,6 @@
                     if (lastMarker) {
                         map.removeLayer(lastMarker);
                     }
-
                     lastMarker = L.marker([lat, lng], {
                         draggable: true
                     }).addTo(map);
@@ -302,12 +301,10 @@
             const lat = parseFloat(document.getElementById('inputLat').value);
             const lng = parseFloat(document.getElementById('inputLng').value);
 
-
             if (!isNaN(lat) && !isNaN(lng)) {
                 if (lastMarker) {
                     map.removeLayer(lastMarker);
                 }
-
                 lastMarker = L.marker([lat, lng], {
                     draggable: true
                 }).addTo(map);
@@ -337,7 +334,6 @@
 
                     updateGeodesicAndCalculations(); // Обновление геодезической линии
                     saveToSessionStorage();
-
                 });
             } else {
                 alert("Пожалуйста, введите корректные координаты.");
@@ -364,7 +360,7 @@
                 })
                 .then(data => {
                     elevationValue = data.elevation;
-                    console.log(`Высота: ${elevationValue}`);
+                    alert(`Высота: ${elevationValue}`); // заменить на console.log, а то замучает, а вообше нам это не надо, это мы не используем
                     // Привязываем всплывающее окно к маркеру (по умолчанию закрыто)
                     lastMarker.bindPopup(`Координаты: ${lat}, ${lng}<br>Высота: ${elevationValue || 'неизвестна'}`);
                 })
@@ -374,7 +370,7 @@
                 })
         }
 
-        // Данные подгружаются с сервера
+        // Загрузка данных с сервера
         fetch('http://localhost:3000/data')
             .then(response => response.json())
             .then(data => {
@@ -405,7 +401,7 @@
             });
 
 
-        // функция для создания геодезических линий
+        // функция для создания геодезических линий и выполнения подсчётов
         function updateGeodesicAndCalculations() {
             if (geodesic) {
                 map.removeLayer(geodesic);
@@ -424,6 +420,7 @@
                 performCalculations();
                 saveToSessionStorage();
             };
+
             if (thirdMarker) {
                 if (thirdGeodesic) {
                     map.removeLayer(thirdGeodesic);

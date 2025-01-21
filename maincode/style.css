@@ -221,6 +221,7 @@ body {
     border-radius: 5px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    pointer-events: none;
 }
 
 .button-group button {
