@@ -25,7 +25,7 @@ if __name__ == "__main__":
     
     # Укажите путь к вашему GeoTIFF файлу
     # geotiff_path = 'tiffs/supertiff2.tif'
-    geotiff_path = 'tiffs/11.tif'
+    geotiff_path = 'tiffs/52.tif'
 
     try:
         elevation = get_elevation_from_geotiff(latitude, longitude, geotiff_path)
@@ -58,3 +58,36 @@ if __name__ == "__main__":
 #         print(elevation)  # Возвращаем высоту в stdout
 #     except Exception as e:
 #         print(f"Ошибка при получении высоты: {e}", file=sys.stderr)
+
+
+# import sys
+# import rasterio
+# def get_elevation(lat, lng):
+#     # Открытие TIF-файла
+#     with rasterio.open('tiffs/52.tif') as src:
+#         # Проверка границ растра
+#         bounds = src.bounds
+#         print(f"Границы растра: {bounds}")  # Отладочная строка
+#         # Проверка, находятся ли lat/lng в пределах границ
+#         if not (bounds.left <= lng <= bounds.right and bounds.bottom <= lat <= bounds.top):
+#             print("Предоставленные широта и долгота выходят за границы растра. Выполнение прекращено.")
+#             return  # Прекращаем выполнение функции, если координаты вне границ
+#         # Преобразование координат в индексы
+#         row, col = src.index(lng, lat)
+#         print(f"Строка: {row}, Столбец: {col}")  # Отладочная строка
+#         # Чтение значения высоты
+#         elevation_array = src.read(1)
+        
+#         # Проверка, действительны ли индексы строки и столбца
+#         if row < 0 or row >= elevation_array.shape[0] or col < 0 or col >= elevation_array.shape[1]:
+#             print("Индекс строки или столбца выходит за пределы. Выполнение прекращено.")
+#             return  # Прекращаем выполнение функции, если индексы вне границ
+#         elevation = elevation_array[row, col]
+#         return elevation
+# if __name__ == "__main__":
+#     latitude = float(sys.argv[1])
+#     longitude = float(sys.argv[2])
+#     elevation = get_elevation(latitude, longitude)
+    
+#     if elevation is not None:
+#         print(elevation)  # Вывод высоты в стандартный вывод, если значение получено
