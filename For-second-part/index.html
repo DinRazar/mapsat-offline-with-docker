@@ -42,6 +42,7 @@
             <select id="dataSpeed" class="styled-dropdown">
                 <option value="" disabled selected hidden> Кодовая скорость </option>
             </select>
+            <button id="applyButton">Применить</button>
         </div>
     </div>
     <div id="mapAndCalc">
@@ -51,58 +52,7 @@
                 <button id="onlineBtn">Онлайн</button>
             </div>
         </div>
-        <div id="secondCalculation">
-            <div>
-                <label for="inputLat"></label>
-                <input type="text" id="inputLat" placeholder="Широта">
-            </div>
-            <div>
-                <label for="inputLng"></label>
-                <input type="text" id="inputLng" placeholder="Долготу">
-            </div>
-            <div>
-                <label for="inputHeight"></label>
-                <input type="text" id="inputHeight" placeholder="Высота подъёма">
-            </div>
-            <div>
-                <label for="inputAzim"></label>
-                <input type="text" id="inputAzim" placeholder="Азимут направления главного лепестка">
-            </div>
-            <select id="dataStand" class="styled-dropdown">
-                <option value="" disabled selected hidden> Стандарт вещания </option>
-            </select>
-            <div>
-                <label for="inputFrec"></label>
-                <input type="text" id="inputFrec" placeholder="Частота вещания:">
-            </div>
-            <div>
-                <select id="dataPol" class="styled-dropdown">
-                    <option value="" disabled selected hidden> Поляризация </option>
-                </select>
-            </div>
-            <div>
-                <select id="dataMod" class="styled-dropdown">
-                    <option value="" disabled selected hidden> Тип модуляции </option>
-                </select>
-            </div>
-            <div>
-                <select id="dataSp" class="styled-dropdown">
-                    <option value="" disabled selected hidden> Кодовая скорость </option>
-                </select>
-            </div>
-            <div>
-                <label for="inputLng"></label>
-                <input type="text" id="inputLng" placeholder="мощность передатчика">
-            </div>
-            <div>
-                <label for="inputHeight"></label>
-                <input type="text" id="inputHeight" placeholder="коэфицент усиления антены">
-            </div>
-            <div>
-                <label for="inputAzim"></label>
-                <input type="text" id="inputAzim" placeholder="ширина главного лепестка">
-            </div>
-        </div>
+        <!-- ВСТАВИТЬ НИЗ СЮДА -->
     </div>
     <!-- Библиотека leaflet для онлайн расчётов -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -218,14 +168,6 @@
                         const selectedOption = event.target.selectedOptions[0];
                         const latitude = selectedOption.dataset.latitude;
                         const longitude = selectedOption.dataset.longitude;
-
-                        if (markerFromDB) {
-                            map.removeLayer(markerFromDB);
-                        }
-
-                        markerFromDB = L.marker([latitude, longitude]).addTo(map).bindPopup(selectedOption.textContent);
-                        updateGeodesicAndCalculations();
-                        saveToSessionStorage();
                     })
                     .catch(error => console.error('Ошибка загрузки данных:', error));
             });
@@ -233,3 +175,60 @@
 </body>
 
 </html>
+
+
+
+
+
+<!-- <div id="secondCalculation">
+            <div>
+                <label for="inputLat"></label>
+                <input type="text" id="inputLat" placeholder="Широта">
+            </div>
+            <div>
+                <label for="inputLng"></label>
+                <input type="text" id="inputLng" placeholder="Долготу">
+            </div>
+            <div>
+                <label for="inputHeight"></label>
+                <input type="text" id="inputHeight" placeholder="Высота подъёма">
+            </div>
+            <div>
+                <label for="inputAzim"></label>
+                <input type="text" id="inputAzim" placeholder="Азимут направления главного лепестка">
+            </div>
+            <select id="dataStand" class="styled-dropdown">
+                <option value="" disabled selected hidden> Стандарт вещания </option>
+            </select>
+            <div>
+                <label for="inputFrec"></label>
+                <input type="text" id="inputFrec" placeholder="Частота вещания:">
+            </div>
+            <div>
+                <select id="dataPol" class="styled-dropdown">
+                    <option value="" disabled selected hidden> Поляризация </option>
+                </select>
+            </div>
+            <div>
+                <select id="dataMod" class="styled-dropdown">
+                    <option value="" disabled selected hidden> Тип модуляции </option>
+                </select>
+            </div>
+            <div>
+                <select id="dataSp" class="styled-dropdown">
+                    <option value="" disabled selected hidden> Кодовая скорость </option>
+                </select>
+            </div>
+            <div>
+                <label for="inputLng"></label>
+                <input type="text" id="inputLng" placeholder="Мощность передатчика">
+            </div>
+            <div>
+                <label for="inputHeight"></label>
+                <input type="text" id="inputHeight" placeholder="Коэфицент усиления антены">
+            </div>
+            <div>
+                <label for="inputAzim"></label>
+                <input type="text" id="inputAzim" placeholder="Ширина главного лепестка">
+            </div>
+        </div> -->

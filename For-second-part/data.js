@@ -68,3 +68,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const dataStandardSelect = document.getElementById('dataStandard');
+    const dataSpeedSelect = document.getElementById('dataSpeed');
+    const dataModulationSelect = document.getElementById('dataModulation');
+    const dataPolarizationSelect = document.getElementById('dataPolarization');
+    const inputFrec = document.getElementById('inputFrec');
+    const applyButton = document.getElementById('applyButton'); // Кнопка "Применить"
+    const dataDropdown = document.getElementById('dataDropdown');
+
+    // Объект для хранения выбранных значений
+    let selectedValues = {
+        standard: '',
+        speed: '',
+        modulation: '',
+        polarization: '',
+        frequency: '',
+        satelliteLongitude: '' // Долгота спутника
+    };
+
+    // Функция для обновления выбранных значений
+    function updateSelectedValues() {
+        selectedValues.standard = dataStandardSelect.value;
+        selectedValues.speed = dataSpeedSelect.value;
+        selectedValues.modulation = dataModulationSelect.value;
+        selectedValues.polarization = dataPolarizationSelect.value;
+        selectedValues.frequency = inputFrec.value;
+    }
+
+    // Загрузка данных с сервера
+    fetch('http://localhost:3000/data')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.longitude; // Сохраняем долготу как значение
+                option.textContent = item.Names; // Отображаем название спутника
+                option.dataset.latitude = item.latitude; // Сохраняем широту
+                option.dataset.longitude = item.longitude; // Сохраняем долготу
+                dataDropdown.appendChild(option);
+            });
+
+            // Обработчик изменения для выпадающего списка спутников
+            dataDropdown.addEventListener('change', (event) => {
+                const selectedOption = event.target.selectedOptions[0];
+                selectedValues.satelliteLongitude = selectedOption.dataset.longitude; // Долгота спутника
+            });
+        })
+        .catch(error => console.error('Ошибка загрузки данных:', error));
+
+    // Обработчики событий для обновления значений
+    dataStandardSelect.addEventListener('change', updateSelectedValues);
+    dataSpeedSelect.addEventListener('change', updateSelectedValues);
+    dataModulationSelect.addEventListener('change', updateSelectedValues);
+    dataPolarizationSelect.addEventListener('change', updateSelectedValues);
+    inputFrec.addEventListener('input', updateSelectedValues);
+
+    // Обработчик для кнопки "Применить"
+    applyButton.addEventListener('click', () => {
+        sendData();
+    });
+
+    // Функция для отправки данных на сервер
+    function sendData() {
+        fetch('http://localhost:3000/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(selectedValues)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Данные успешно отправлены:', data);
+            })
+            .catch((error) => {
+                console.error('Ошибка при отправке данных:', error);
+            });
+    }
+});
