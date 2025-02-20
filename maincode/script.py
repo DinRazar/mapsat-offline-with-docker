@@ -25,7 +25,7 @@ if __name__ == "__main__":
     
     # Укажите путь к вашему GeoTIFF файлу
     # geotiff_path = 'tiffs/supertiff2.tif'
-    geotiff_path = 'tiffs/52.tif'
+    geotiff_path = 'tiffs/globalTiff.tif'
 
     try:
         elevation = get_elevation_from_geotiff(latitude, longitude, geotiff_path)

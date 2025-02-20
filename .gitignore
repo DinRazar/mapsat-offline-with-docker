@@ -1,4 +1,5 @@
 # Файл гитигнор для того чтоб не грузить на гит лишнюю фигню
-/maincode/node_modules
+maincode/node_modules
 /maincode/data
 /maincode/tiffs
+/maincode/For-second-part

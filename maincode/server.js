@@ -28,7 +28,7 @@ app.post('/api/getElevation', (req, res) => {
     const { latitude, longitude } = req.body;
 
     // Запуск Python-скрипта с координатами
-    const pythonProcess = spawn('python', ['script.py', latitude, longitude]);
+    const pythonProcess = spawn('python3', ['script.py', latitude, longitude]);
 
     pythonProcess.stdout.on('data', (data) => {
         const elevation = parseFloat(data.toString());
